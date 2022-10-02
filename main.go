@@ -7,6 +7,7 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/rod/lib/utils"
+	"github.com/go-rod/stealth"
 	"github.com/op/go-logging"
 	"os"
 	"path"
@@ -67,6 +68,7 @@ func main() {
 	defer closeBrowser()
 	log.Debug("Chrome initialization Finished.")
 
+	// Clear cookies
 	if *debug {
 		err = browser.SetCookies(nil)
 		if err != nil {
@@ -76,7 +78,18 @@ func main() {
 	log.Debug("Cookies cleared.")
 
 	// Open page
-	page, err := browser.Page(proto.TargetCreateTarget{URL: *streamURL})
+	page, err := stealth.Page(browser)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ua := &proto.NetworkSetUserAgentOverride{
+		UserAgent:      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
+		AcceptLanguage: "en-US",
+	}
+	page.SetUserAgent(ua)
+
+	err = page.Navigate(*streamURL)
 	if err != nil {
 		log.Fatal(err)
 	}
